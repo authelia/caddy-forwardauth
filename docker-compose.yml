@@ -1,0 +1,71 @@
+---
+version: "3.8"
+
+services:
+  redis:
+    container_name: "${REDIS_SERVICE_NAME:-redis}"
+    image: "${REDIS_IMAGE_REGISTRY:-docker.io}/${REDIS_IMAGE_REPOSITORY:-bitnami/redis}:${REDIS_IMAGE_TAG:-latest}"
+    restart: unless-stopped
+    stop_grace_period: 30s
+    networks:
+      caddy:
+    expose:
+      - 6379
+    environment:
+      TZ: "${TZ:-Australia/Melbourne}"
+      ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - $PWD/data/redis:/bitnami/redis/data
+  postgres:
+    container_name: "${POSTGRES_SERVICE_NAME:-postgres}"
+    image: "${POSTGRES_IMAGE_REGISTRY:-docker.io}/${POSTGRES_IMAGE_REPOSITORY:-bitnami/postgresql}:${POSTGRES_IMAGE_TAG:-latest}"
+    restart: unless-stopped
+    networks:
+      caddy:
+    environment:
+      TZ: "${TZ:-Australia/Melbourne}"
+      POSTGRESQL_POSTGRES_PASSWORD: "${POSTGRES_POSTGRES_PASSWORD:-postgres}"
+      POSTGRESQL_DATABASE: "${POSTGRES_DATABASE:-authelia}"
+      POSTGRESQL_USERNAME: "${POSTGRES_USERNAME:-authelia}"
+      POSTGRESQL_PASSWORD: "${POSTGRES_PASSWORD:-authelia}"
+    volumes:
+      - $PWD/data/postgresql:/bitnami/postgresql
+  authelia:
+    container_name: "${AUTHELIA_SERVICE_NAME:-authelia}"
+    image: ${AUTHELIA_IMAGE_REGISTRY:-docker.io}/${AUTHELIA_IMAGE_REPOSITORY:-authelia/authelia}:${AUTHELIA_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      caddy:
+    expose:
+      - 9091
+    user: "${AUTHELIA_RUN_USER:-2000:2000}"
+    environment:
+      TZ: "${TZ:-Australia/Melbourne}"
+      AUTHELIA_JWT_SECRET_FILE: /secrets/JWT
+      AUTHELIA_SESSION_SECRET_FILE: /secrets/SESSION
+      AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /secrets/STORAGE
+    volumes:
+      - $PWD/data/authelia/config:/config
+      - $PWD/data/authelia/secrets:/secrets:ro
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${CADDY_VERSION:-latest}
+    command: caddy run --config /etc/caddy/Caddyfile.json
+    restart: unless-stopped
+    networks:
+      caddy:
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - $PWD/data/caddy/Caddyfile.json:/etc/caddy/Caddyfile.json
+      - $PWD/data/caddy/site:/srv
+      - $PWD/data/caddy/data:/data
+      - $PWD/data/caddy/config:/config
+
+networks:
+  caddy:
+...

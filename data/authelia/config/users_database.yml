@@ -1,0 +1,9 @@
+---
+users:
+  caddy:
+    displayname: "Caddy User"
+    password: "$6$rounds=50000$Z0Y4dGFuZ0pKVWRv$6JUa/yL0KDA7DNV4y81yBzBS2EDi1GYTKGjbIGX3rPguNR1/IWgqH3d7slwZ5dz/1r2saEATS6sy.6qTR1u4R1"  # caddy
+    email: caddy@authelia.com
+    groups:
+      - caddy
+...

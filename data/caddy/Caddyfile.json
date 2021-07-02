@@ -1,0 +1,130 @@
+{
+  "logging": {
+    "logs": {
+      "default": {
+        "level": "DEBUG"
+      }
+    }
+  },
+  "apps": {
+    "http": {
+      "http_port": 80,
+      "https_port": 443,
+      "servers": {
+        "localhost": {
+          "listen": [":80", ":443"],
+          "routes": [
+            {
+              "match": [
+                {
+                  "host": ["www.example.com"],
+                  "path": ["/"]
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "static_response",
+                  "status_code": 200,
+                  "body": "this is the default domain"
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [
+                {
+                  "host": ["bypass.example.com"],
+                  "path": ["/"]
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "authentication",
+                  "providers": {
+                    "forwardauth": {
+                      "address": "http://authelia:9091/api/verify?rd=https://auth.example.com",
+                      "trustedProxies": [],
+                      "trustForwardedHeaders": false,
+                      "setXOriginalURL": false,
+                      "authResponseHeaders": ["Remote-User", "Remote-Name", "Remote-Groups", "Remote-Emails"],
+                      "authRequestHeaders": [],
+                      "userHeaders": {
+                        "id": "Remote-User",
+                        "emails": "Remote-Emails",
+                        "name": "Remote-Name",
+                        "groups": "Remote-Groups"
+                      }
+                    }
+                  }
+                },
+                {
+                  "handler": "static_response",
+                  "status_code": 200,
+                  "body": "this is a bypassed domain"
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [
+                {
+                  "host": ["secret.example.com"],
+                  "path": ["/"]
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "authentication",
+                  "providers": {
+                    "forwardauth": {
+                      "address": "http://authelia:9091/api/verify?rd=https://auth.example.com",
+                      "trustedProxies": [],
+                      "trustForwardedHeaders": false,
+                      "setXOriginalURL": false,
+                      "authResponseHeaders": ["Remote-User", "Remote-Name", "Remote-Groups", "Remote-Emails"],
+                      "authRequestHeaders": [],
+                      "userHeaders": {
+                        "id": "Remote-User",
+                        "emails": "Remote-Emails",
+                        "name": "Remote-Name",
+                        "groups": "Remote-Groups"
+                      }
+                    }
+                  }
+                },
+                {
+                  "handler": "static_response",
+                  "status_code": 200,
+                  "body": "this is a secret"
+                }
+              ],
+              "terminal": true
+            },
+            {
+              "match": [
+                {
+                  "host": ["auth.example.com"],
+                  "path": ["/"]
+                }
+              ],
+              "handle": [
+                {
+                  "handler": "reverse_proxy",
+                  "transport": {
+                    "protocol": "http"
+                  },
+                  "upstreams":[
+                    {
+                      "dial": "authelia:9091"
+                    }
+                  ]
+                }
+              ],
+              "terminal": true
+            }
+          ]
+        }
+      }
+    }
+  }
+}
