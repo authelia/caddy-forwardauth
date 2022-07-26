@@ -1,3 +1,7 @@
+# Archived
+
+This repository is archived in favor of using the [forward_auth directive](https://caddyserver.com/docs/caddyfile/directives/forward_auth) within caddy.
+
 # caddy-forwardauth
 
 A simple implementation of the [Traefik] forward auth spec in a Caddy v2 Module. There are no plans to backport this to 
